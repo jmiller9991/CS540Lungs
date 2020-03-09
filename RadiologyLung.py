@@ -19,10 +19,11 @@ import random
 import math as m
 
 raw_image_path = 'Data/samples/'
-output_directory = 'Data\\outputtojpg'
-candidate_file = 'Data\\candidates.csv'
+output_directory = 'Data/outputtojpg/'
+candidate_file = 'Data/candidates.csv/'
 X_log_train = []
 X_log_test = []
+
 
 class CTScan(object):
     """
@@ -228,9 +229,8 @@ def splitLogMethod(dir):
     X_data_orig = []
     X_train = []
     X_test = []
-    for f in os.listdir(dir):
-        f.open('r')
-        X_data_orig.append(log(f))
+    path = [open(dir + name) for name in os.listdir(dir)]
+    X_data_orig.append(log(path))
     cv.imshow("Logs", X_data_orig[0])
 
     random.seed(420)
@@ -245,6 +245,13 @@ def splitLogMethod(dir):
         X_test.append(temp2)
 
     return X_train, X_test
+
+
+def convert_pickles_outdir(data, idx):
+    inp = cv.imread(data +'/image_' + str(idx) + '.jpg')
+    Image.fromarray(inp).convert('L').save(output_directory +\
+                                           'image_' + str(idx) + '.jpg')
+
 
 def main():
     if len(sys.argv) < 2:
@@ -263,8 +270,23 @@ def main():
         do_test_train_split(candidate_file)
     X_data = pd.read_pickle(inpfile)
     Parallel(n_jobs=3)(delayed(create_data)(idx, outDir, X_data) for idx in X_data.index)
-    
-    x_log_train, x_log_test = splitLogMethod(outDir)
+
+    X_train = pd.read_pickle('traindata')
+    y_train = pd.read_pickle('trainlabels')
+    augIndexes = X_train[y_train == 1].index
+    Parallel(n_jobs=3)(delayed(convert_pickles_outdir)('train', idx) for idx in augIndexes)
+
+    X_test = pd.read_pickle('testdata')
+    y_test = pd.read_pickle('testlabels')
+    augIndexes = X_train[y_train == 1].index
+    Parallel(n_jobs=3)(delayed(convert_pickles_outdir)('test', idx) for idx in augIndexes)
+
+    X_val = pd.read_pickle('valdata')
+    y_val = pd.read_pickle('vallabels')
+    augIndexes = X_train[y_train == 1].index
+    Parallel(n_jobs=3)(delayed(convert_pickles_outdir)('val', idx) for idx in augIndexes)
+
+    x_log_train, x_log_test = splitLogMethod(output_directory)
 
     model, batchSize, epochs = buildModel((50, 50))
     model.summary()
