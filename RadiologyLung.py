@@ -9,8 +9,8 @@ from PIL import Image
 import SimpleITK as sitk
 import cv2 as cv
 
-raw_image_path = 'data/samples/'
-output_directory = '../ ../ data/outputtojpg'
+raw_image_path = '../../data/samples/'
+output_directory = '../../data/outputtojpg'
 candidate_file = '../data/candidates.csv'
 
 class MHDConverter(object):
@@ -59,6 +59,11 @@ def log(image):
     laplacian = cv.Laplacian(gauss, cv.CV_32F, 3, 0.25)
     return laplacian
 
+def hog(image, size, blockSize, blockStride, cellSize, nbins, winStride, padding, locations):
+    histOrGrad = cv.HOGDescriptor(size, blockSize, blockStride, cellSize, nbins)
+
+    hist = histOrGrad.compute(image, winStride, padding, locations)
+'''
 def computeOneFeatures(image, feature, startIndex):
     magImg = np.zeros((256, 256, 1), dtype="float64")
     angleImg = np.zeros((256, 256, 1), dtype="float64")
@@ -94,6 +99,7 @@ def computeFeatures(image, regionSideCount, feature):
             subImg = image(cv.rectangle(j * regionSize), (i * regionSize), regionSize, regionSize)
             computeOneFeatures(subImg, feature, index)
             index += 36
+'''
 
 def convert_data(idx, outDir, X_data, width=50):
     converter = MHDConverter(np.asarray(X_data.loc[idx])[0], np.asarray(X_data.loc[idx])[1:], raw_image_path)
